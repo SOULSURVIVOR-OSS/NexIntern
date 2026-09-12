@@ -25,8 +25,8 @@ export const AnalysisExperience: React.FC<AnalysisExperienceProps> = ({
   const [isComplete, setIsComplete] = useState<boolean>(false);
 
   useEffect(() => {
-    // Fast, responsive progression through stages
-    const stepDuration = 120; // 120ms per step for ultra-fast response
+    // Progress sequentially through all 7 stages
+    const stepDuration = 550; // ms per step for a snappy, cinematic feel
     const timer = setInterval(() => {
       setCurrentStepIndex((prev) => {
         if (prev < steps.length - 1) {
@@ -34,10 +34,10 @@ export const AnalysisExperience: React.FC<AnalysisExperienceProps> = ({
         } else {
           clearInterval(timer);
           setIsComplete(true);
-          // Quick smooth handoff to results
+          // Smooth transition after completion
           setTimeout(() => {
             onComplete();
-          }, 200);
+          }, 850);
           return prev;
         }
       });

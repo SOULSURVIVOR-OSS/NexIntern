@@ -8,7 +8,6 @@ import {
   FolderSync
 } from 'lucide-react';
 import { JobDescription } from '../types';
-import { extractTextFromPdfBase64Client, runClientJDParser } from '../services/clientParsers';
 
 interface JDUploadStageProps {
   jobDescription: JobDescription;
@@ -116,68 +115,49 @@ export const JDUploadStage: React.FC<JDUploadStageProps> = ({
       item.id === progressId ? { ...item, status: 'analyzing' } : item
     ));
 
-    let parsed: any = null;
+    const response = await fetch('/api/parse-jd-file', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-    const isLocal = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-    // 1. Try server endpoint only when running on localhost with backend
-    if (isLocal) {
-      try {
-        const response = await fetch('/api/parse-jd-file', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(1500),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            parsed = result.data;
-          }
-        }
-      } catch (apiErr) {
-        console.warn('Server JD parser unavailable, using client-side engine:', apiErr);
-      }
+    if (!response.ok) {
+      throw new Error(`Failed to parse ${file.name}`);
     }
 
-    // 2. Client-side parser fallback (for Vercel, static hosting, or offline)
-    if (!parsed) {
-      let rawText = payload.rawText || '';
-      if (!rawText && payload.base64Data) {
-        rawText = extractTextFromPdfBase64Client(payload.base64Data);
-      }
-      parsed = runClientJDParser(file.name, rawText);
+    const result = await response.json();
+    if (result.success && result.data) {
+      const parsed = result.data;
+      const newJD: JobDescription = {
+        id: `role-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        title: parsed.title || file.name.replace(/\.[^.]+$/, '').replace(/[_\-]+/g, ' '),
+        company: parsed.company || 'Hiring Organization',
+        location: parsed.location || 'Hybrid / Remote',
+        department: parsed.department || 'Engineering',
+        employmentType: parsed.employmentType || 'Full-time Internship (6 Months)',
+        experienceLevel: parsed.experienceLevel || 'Student / Recent Graduate',
+        summary: parsed.summary || 'Extracted job description requirements.',
+        requiredSkills: Array.isArray(parsed.requiredSkills) && parsed.requiredSkills.length > 0 
+          ? parsed.requiredSkills 
+          : ['TypeScript', 'React'],
+        preferredSkills: Array.isArray(parsed.preferredSkills) ? parsed.preferredSkills : ['Docker'],
+        responsibilities: Array.isArray(parsed.responsibilities) ? parsed.responsibilities : [],
+        qualifications: Array.isArray(parsed.qualifications) ? parsed.qualifications : [],
+        rawText: parsed.extractedText || payload.rawText || '',
+        analysisSummary: parsed.analysisSummary,
+        competencyBreakdown: parsed.competencyBreakdown,
+        sourceFileName: file.name,
+        analyzedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setBatchQueue(prev => prev.map(item => 
+        item.id === progressId ? { ...item, status: 'done', extractedTitle: newJD.title } : item
+      ));
+
+      return newJD;
+    } else {
+      throw new Error(result.error || `Could not parse requirements from ${file.name}`);
     }
-
-    const newJD: JobDescription = {
-      id: `role-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      title: parsed.title || file.name.replace(/\.[^.]+$/, '').replace(/[_\-]+/g, ' '),
-      company: parsed.company || 'Hiring Organization',
-      location: parsed.location || 'Hybrid / Remote',
-      department: parsed.department || 'Engineering',
-      employmentType: parsed.employmentType || 'Full-time Internship (6 Months)',
-      experienceLevel: parsed.experienceLevel || 'Student / Recent Graduate',
-      summary: parsed.summary || 'Extracted job description requirements.',
-      requiredSkills: Array.isArray(parsed.requiredSkills) && parsed.requiredSkills.length > 0 
-        ? parsed.requiredSkills 
-        : ['TypeScript', 'React'],
-      preferredSkills: Array.isArray(parsed.preferredSkills) ? parsed.preferredSkills : ['Docker'],
-      responsibilities: Array.isArray(parsed.responsibilities) ? parsed.responsibilities : [],
-      qualifications: Array.isArray(parsed.qualifications) ? parsed.qualifications : [],
-      rawText: parsed.extractedText || payload.rawText || '',
-      analysisSummary: parsed.analysisSummary,
-      competencyBreakdown: parsed.competencyBreakdown,
-      sourceFileName: file.name,
-      analyzedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setBatchQueue(prev => prev.map(item => 
-      item.id === progressId ? { ...item, status: 'done', extractedTitle: newJD.title } : item
-    ));
-
-    return newJD;
   };
 
   // Handle batch file upload (1 or multiple files)
