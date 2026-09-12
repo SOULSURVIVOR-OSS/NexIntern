@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Upload, FileText, CheckCircle2, Trash2, Plus, Sparkles, ArrowRight, ArrowLeft, Users, AlertCircle, RotateCcw } from 'lucide-react';
+import { Upload, FileText, Trash2, Plus, Sparkles, ArrowRight, ArrowLeft, Users, AlertCircle, RotateCcw } from 'lucide-react';
 import { CandidateResume, JobDescription } from '../types';
+import { parseResumeClient } from '../services/clientParser';
 
 interface ResumeUploadStageProps {
   jobDescription: JobDescription;
@@ -102,33 +103,9 @@ export const ResumeUploadStage: React.FC<ResumeUploadStageProps> = ({
 
         throw new Error(`Server returned ${response.status}`);
       } catch (err) {
-        console.warn(`Fallback parsing for ${file.name}:`, err);
-        const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-        const fallbackCandidate: CandidateResume = {
-          id: `uploaded-${Date.now()}-${i}`,
-          name: cleanName.length > 2 ? cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : `Applicant ${candidates.length + 1}`,
-          email: `${cleanName.toLowerCase().replace(/\s+/g, '.')}@campus.edu`,
-          education: {
-            degree: 'B.Tech / B.E. in Computer Science',
-            institution: 'University Candidate',
-            graduationYear: '2025',
-          },
-          summary: `Uploaded candidate resume from ${file.name}.`,
-          skills: ['Software Engineering', 'Problem Solving', 'Git'],
-          experience: [],
-          projects: [
-            {
-              title: `${cleanName} Technical Portfolio`,
-              technologies: ['Software Engineering'],
-              description: `Project work submitted by ${cleanName}.`,
-            }
-          ],
-          rawText: `Resume of ${cleanName}\nSource file: ${file.name}`,
-          formatCharacteristics: {
-            formatType: 'clean-structured',
-          },
-        };
-        onAddCandidate(fallbackCandidate);
+        console.warn(`API parsing unavailable for ${file.name}, using client parser:`, err);
+        const candidate = parseResumeClient(file.name, payload?.rawText, payload?.base64Data);
+        onAddCandidate(candidate);
       }
     }
 
@@ -310,10 +287,7 @@ export const ResumeUploadStage: React.FC<ResumeUploadStageProps> = ({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 max-h-[460px] overflow-y-auto p-1 pr-2">
             <AnimatePresence>
-              {candidates.map((cand, idx) => {
-                const fileNum = String(idx + 1).padStart(2, '0');
-                const fileName = `resume_${cand.name.toLowerCase().replace(/\s+/g, '_')}.pdf`;
-                
+              {candidates.map((cand) => {
                 return (
                   <motion.div
                     key={cand.id}
@@ -321,45 +295,22 @@ export const ResumeUploadStage: React.FC<ResumeUploadStageProps> = ({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-white dark:bg-[#181a20] rounded-2xl p-4 border border-black/[0.06] dark:border-white/[0.08] shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between group text-left"
+                    className="bg-white dark:bg-[#181a20] rounded-xl px-4 py-3.5 border border-black/[0.06] dark:border-white/[0.08] shadow-2xs hover:shadow-xs transition-all flex items-center justify-between group text-left"
                   >
-                    <div className="flex items-start justify-between gap-2 mb-2.5">
-                      <span className="text-[11px] font-mono font-bold text-slate-400 dark:text-[#86868b]">
-                        Candidate {fileNum}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-800/60">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Ready
-                      </span>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight truncate">
-                        {cand.name}
-                      </h4>
-                      <p className="text-[11px] text-slate-400 dark:text-[#86868b] truncate mt-0.5">
-                        {fileName}
-                      </p>
-                      <p className="text-[11px] text-slate-500 dark:text-[#a1a1a6] line-clamp-1 mt-1 font-medium">
-                        {cand.education.degree} ({cand.education.institution})
-                      </p>
-                    </div>
-
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500 dark:text-[#86868b] font-medium">
-                        {cand.skills.length} skills listed
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveCandidate(cand.id);
-                        }}
-                        className="opacity-70 sm:opacity-0 group-hover:opacity-100 p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                        title={`Delete ${cand.name}'s resume`}
-                        aria-label={`Delete ${cand.name}'s resume`}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    <h4 className="text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight truncate">
+                      {cand.name}
+                    </h4>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveCandidate(cand.id);
+                      }}
+                      className="opacity-60 sm:opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                      title={`Delete ${cand.name}'s resume`}
+                      aria-label={`Delete ${cand.name}'s resume`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </motion.div>
                 );
               })}

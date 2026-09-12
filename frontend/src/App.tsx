@@ -53,28 +53,31 @@ export default function App() {
   }, [allJobDescriptions]);
 
   const [candidates, setCandidates] = useState<CandidateResume[]>(() => {
+    // Clear any persistent localStorage copy so uploaded resumes from previous visits are deleted
     try {
-      const saved = localStorage.getItem('internloom_candidates');
+      localStorage.removeItem('internloom_candidates');
+    } catch (e) {}
+
+    try {
+      const saved = sessionStorage.getItem('internloom_session_candidates');
       if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          // Clean out any legacy mock placeholder resumes from before the real parser was wired
-          const cleaned = parsed.filter(c => c.summary !== 'Newly uploaded candidate resume parsed via InternLoom ingestion layer.');
-          return cleaned.length > 0 ? cleaned : sampleCandidates;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
         }
       }
     } catch (e) {
-      console.error('Error loading saved candidates', e);
+      console.error('Error loading session candidates', e);
     }
     return sampleCandidates;
   });
 
-  // Sync candidates to localStorage
+  // Sync candidates to sessionStorage (automatically deleted when the browser/tab is closed)
   useEffect(() => {
     try {
-      localStorage.setItem('internloom_candidates', JSON.stringify(candidates));
+      sessionStorage.setItem('internloom_session_candidates', JSON.stringify(candidates));
     } catch (e) {
-      console.error('Error saving candidates', e);
+      console.error('Error saving session candidates', e);
     }
   }, [candidates]);
 
