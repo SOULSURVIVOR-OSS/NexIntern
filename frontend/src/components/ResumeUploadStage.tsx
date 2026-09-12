@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Upload, FileText, CheckCircle2, Trash2, Plus, Sparkles, ArrowRight, ArrowLeft, Users, AlertCircle, RotateCcw } from 'lucide-react';
 import { CandidateResume, JobDescription } from '../types';
+import { extractTextFromPdfBase64Client, runClientResumeParser } from '../services/clientParsers';
 
 interface ResumeUploadStageProps {
   jobDescription: JobDescription;
@@ -102,33 +103,15 @@ export const ResumeUploadStage: React.FC<ResumeUploadStageProps> = ({
 
         throw new Error(`Server returned ${response.status}`);
       } catch (err) {
-        console.warn(`Fallback parsing for ${file.name}:`, err);
-        const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-        const fallbackCandidate: CandidateResume = {
-          id: `uploaded-${Date.now()}-${i}`,
-          name: cleanName.length > 2 ? cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : `Applicant ${candidates.length + 1}`,
-          email: `${cleanName.toLowerCase().replace(/\s+/g, '.')}@campus.edu`,
-          education: {
-            degree: 'B.Tech / B.E. in Computer Science',
-            institution: 'University Candidate',
-            graduationYear: '2025',
-          },
-          summary: `Uploaded candidate resume from ${file.name}.`,
-          skills: ['Software Engineering', 'Problem Solving', 'Git'],
-          experience: [],
-          projects: [
-            {
-              title: `${cleanName} Technical Portfolio`,
-              technologies: ['Software Engineering'],
-              description: `Project work submitted by ${cleanName}.`,
-            }
-          ],
-          rawText: `Resume of ${cleanName}\nSource file: ${file.name}`,
-          formatCharacteristics: {
-            formatType: 'clean-structured',
-          },
-        };
-        onAddCandidate(fallbackCandidate);
+        console.warn(`Server resume parser unavailable, using client-side engine for ${file.name}:`, err);
+        let rawText = '';
+        if (payload?.rawText) {
+          rawText = payload.rawText;
+        } else if (payload?.base64Data) {
+          rawText = extractTextFromPdfBase64Client(payload.base64Data);
+        }
+        const clientCandidate = runClientResumeParser(file.name, rawText);
+        onAddCandidate(clientCandidate);
       }
     }
 
