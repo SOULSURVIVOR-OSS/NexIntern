@@ -107,20 +107,20 @@ EXPERIENCE & WORK:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 backdrop-blur-xs overflow-y-auto">
+      <div className="bg-white dark:bg-[#181a20] border border-slate-200 dark:border-white/[0.1] rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl dark:shadow-[0_24px_64px_rgba(0,0,0,0.5)] overflow-hidden my-8">
         
         {/* Header */}
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+        <div className="p-5 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between bg-slate-50/80 dark:bg-[#15161a]">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-50 text-[#0a664e] border border-emerald-200">
-              <Upload className="w-5 h-5 text-[#0a664e]" />
+            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0a664e] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+              <Upload className="w-5 h-5 text-[#0a664e] dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f5f7] tracking-tight flex items-center gap-2">
                 Ingest & Evaluate New Candidate Resume
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-[#a1a1a6]">
                 Test how the hybrid BM25 + Vector Semantic engine handles new resumes on the fly.
               </p>
             </div>
@@ -128,7 +128,7 @@ EXPERIENCE & WORK:
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
+            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -139,7 +139,7 @@ EXPERIENCE & WORK:
           
           {/* Quick Samples */}
           <div>
-            <span className="font-bold text-slate-700 block mb-1.5 flex items-center gap-1">
+            <span className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span>Or populate with a test sample:</span>
             </span>
@@ -149,7 +149,7 @@ EXPERIENCE & WORK:
                   type="button"
                   key={idx}
                   onClick={() => handleUseSample(sample)}
-                  className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-[#0a664e] text-slate-700 border border-slate-200 transition font-medium text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#20232b] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-[#0a664e] dark:hover:text-emerald-400 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] transition font-medium text-xs cursor-pointer"
                 >
                   Load: {sample.title}
                 </button>
@@ -159,43 +159,43 @@ EXPERIENCE & WORK:
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-700 font-bold mb-1">Candidate Full Name *</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Candidate Full Name *</label>
               <input
                 type="text"
                 required
                 placeholder="e.g. Rohan Deshmukh"
                 value={candidateName}
                 onChange={(e) => setCandidateName(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:bg-white focus:outline-none focus:border-emerald-500 transition shadow-2xs"
+                className="w-full bg-slate-50 dark:bg-[#20232b] border border-slate-200 dark:border-white/[0.1] rounded-xl p-2.5 text-slate-900 dark:text-[#f5f5f7] placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#252833] focus:outline-none focus:border-emerald-500 transition shadow-2xs"
               />
             </div>
 
             <div>
-              <label className="block text-slate-700 font-bold mb-1">College / University</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">College / University</label>
               <input
                 type="text"
                 placeholder="e.g. VIT Pune"
                 value={institution}
                 onChange={(e) => setInstitution(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 focus:bg-white focus:outline-none focus:border-emerald-500 transition shadow-2xs"
+                className="w-full bg-slate-50 dark:bg-[#20232b] border border-slate-200 dark:border-white/[0.1] rounded-xl p-2.5 text-slate-900 dark:text-[#f5f5f7] placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#252833] focus:outline-none focus:border-emerald-500 transition shadow-2xs"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-700 font-bold mb-1">Paste Raw Resume Text *</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Paste Raw Resume Text *</label>
             <textarea
               required
               rows={8}
               placeholder="Paste plain text resume here... The resilient ingestion engine parses skills, projects, and work experience automatically."
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-mono text-[11px] focus:bg-white focus:outline-none focus:border-emerald-500 transition leading-relaxed shadow-2xs"
+              className="w-full bg-slate-50 dark:bg-[#20232b] border border-slate-200 dark:border-white/[0.1] rounded-xl p-3 text-slate-900 dark:text-[#f5f5f7] placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono text-[11px] focus:bg-white dark:focus:bg-[#252833] focus:outline-none focus:border-emerald-500 transition leading-relaxed shadow-2xs"
             ></textarea>
           </div>
 
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-emerald-900 text-[11px]">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl flex items-center gap-2 text-emerald-900 dark:text-emerald-300 text-[11px]">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>The hybrid engine will normalize typos, analyze ontology depth, and immediately insert this candidate into the ranked shortlist.</span>
           </div>
 
@@ -203,13 +203,13 @@ EXPERIENCE & WORK:
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold border border-slate-200 transition"
+              className="px-4 py-2 rounded-xl bg-white dark:bg-[#20232b] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-white/[0.1] transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-[#0a664e] hover:bg-emerald-700 text-white font-semibold transition shadow-xs flex items-center gap-1.5"
+              className="px-5 py-2 rounded-xl bg-[#0a664e] hover:bg-emerald-700 text-white font-semibold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <FileText className="w-3.5 h-3.5" />
               <span>Evaluate & Add to Pool</span>

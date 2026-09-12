@@ -12,6 +12,16 @@ export interface JobDescription {
   responsibilities: string[];
   qualifications: string[];
   rawText: string;
+  analysisSummary?: string;
+  competencyBreakdown?: {
+    frontend?: string[];
+    backend?: string[];
+    database?: string[];
+    devopsAndCloud?: string[];
+    foundations?: string[];
+  };
+  sourceFileName?: string;
+  analyzedAt?: string;
 }
 
 export interface WorkExperience {
@@ -97,8 +107,23 @@ export interface CandidateMatchResult {
   areasToProbe: string[];
   evidenceSnippets: { skill: string; snippet: string }[];
   
+  // Requirement: In-depth resume analysis, pros & cons, and recruiter recommendation
+  detailedAnalysis?: CandidateDetailedAnalysis;
+  
   // Bonus: Graceful parsing logs
   formattingLogs: FormattingResilienceLog[];
+}
+
+export interface CandidateDetailedAnalysis {
+  overview: string;                      // Professional brief overview of candidate's background and suitability for this JD
+  pros: string[];                        // Concrete reasons, strengths, verified skills, and project accomplishments for this JD
+  cons: string[];                        // Gaps, missing requirements, unverified areas, and risks for this JD
+  whyRecruiterShouldTakeThem: string;    // Decisive hiring pitch: why the recruiter should take them for this particular JD
+  recommendedVerdict: 'Strong Hire' | 'High Potential' | 'Viable Contender' | 'Skill Gap Watch' | 'Not Recommended';
+  keyDifferentiator: string;            // The standout quality that sets them apart
+  rampUpReadiness: string;              // Time/velocity to get productive in this role
+  interviewProbeQuestions: string[];    // 2-3 specific technical/behavioral questions to probe their gaps
+  source?: 'gemini' | 'engine';         // Whether generated via Gemini AI or deterministic engine
 }
 
 export interface ScoringWeights {

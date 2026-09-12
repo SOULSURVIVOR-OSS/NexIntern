@@ -1,4 +1,4 @@
-import { JobDescription, CandidateResume, CandidateMatchResult, ScoringWeights, SemanticMatchDetail, FormattingResilienceLog } from '../types';
+import { JobDescription, CandidateResume, CandidateMatchResult, ScoringWeights, SemanticMatchDetail, FormattingResilienceLog, CandidateDetailedAnalysis } from '../types';
 
 // Tech and concept synonym / domain ontology mapping
 const DOMAIN_ONTOLOGY: Record<string, { domain: 'Frontend' | 'Backend' | 'Database' | 'DevOps' | 'Fundamentals'; related: string[]; synonyms: string[]; weight: number }> = {
@@ -428,6 +428,183 @@ export function calculateSemanticScore(
   };
 }
 
+// Generate rich, resume-grounded detailed analysis for each candidate
+export function generateDetailedCandidateAnalysis(
+  jd: JobDescription,
+  candidate: CandidateResume,
+  matchedRequired: string[],
+  missingRequired: string[],
+  matchedPreferred: string[],
+  keywordScore: number,
+  semanticScore: number,
+  finalScore: number,
+  rank: number
+): CandidateDetailedAnalysis {
+  const c = candidate;
+  const targetRole = jd.title || 'Technical Role';
+  const targetOrg = jd.company || 'the engineering team';
+
+  // 1. Synthesize Executive Brief Overview
+  const eduString = `${c.education.degree} from ${c.education.institution}${c.education.graduationYear ? ` (Graduation: ${c.education.graduationYear})` : ''}${c.education.gpa ? ` with a strong ${c.education.gpa} GPA` : ''}`;
+  const totalMandatory = jd.requiredSkills.length || 1;
+  const matchRatioStr = `${matchedRequired.length} of ${totalMandatory} required competencies`;
+
+  let fitNarrative = '';
+  if (finalScore >= 80) {
+    fitNarrative = `demonstrates exceptional turnkey readiness with verified end-to-end deliverables across ${matchRatioStr}`;
+  } else if (finalScore >= 65) {
+    fitNarrative = `exhibits high engineering upside and strong technical synergy across ${matchRatioStr}, with minimal ramp-up required`;
+  } else if (finalScore >= 50) {
+    fitNarrative = `presents a viable foundational profile covering ${matchRatioStr}, backed by practical software enthusiasm`;
+  } else {
+    fitNarrative = `shows partial domain overlap with notable skill divergences against the ${targetRole} requirements`;
+  }
+
+  const overview = `${c.name} holds credentials in ${eduString}. For the ${targetRole} requisition at ${targetOrg}, ${c.name} ${fitNarrative}. Their resume features ${c.projects?.length || 0} documented technical project(s) and ${c.skills?.length || 0} recognized skill tags, indicating a profile oriented toward practical coding execution.`;
+
+  // 2. Pros (Evidence-backed strengths directly from resume)
+  const pros: string[] = [];
+
+  // Pro A: Core stack alignment
+  if (matchedRequired.length > 0) {
+    pros.push(
+      `Direct Stack Mastery: Verified competency in ${matchedRequired.slice(0, 5).join(', ')}, fulfilling the core operational tech stack mandated by the ${targetRole} JD.`
+    );
+  }
+
+  // Pro B: Project deliverables
+  if (c.projects && c.projects.length > 0) {
+    const p1 = c.projects[0];
+    const techSnippet = p1.technologies.length > 0 ? ` using ${p1.technologies.slice(0, 3).join(', ')}` : '';
+    const descSnippet = p1.description ? `: "${p1.description.slice(0, 110)}${p1.description.length > 110 ? '...' : ''}"` : '';
+    pros.push(`Verifiable Proof-of-Work: Built "${p1.title}"${techSnippet}${descSnippet}, proving ability to translate architecture concepts into functioning software.`);
+
+    if (c.projects.length > 1) {
+      const p2 = c.projects[1];
+      pros.push(`Multi-Disciplinary Project Breadth: Developed "${p2.title}" (${p2.technologies.slice(0, 3).join(', ')}), demonstrating versatility across diverse problem domains.`);
+    }
+  }
+
+  // Pro C: Preferred skills bonus or tool proficiency
+  if (matchedPreferred.length > 0) {
+    pros.push(`Preferred Competencies Bonus: Possesses demonstrated knowledge in nice-to-have tools (${matchedPreferred.join(', ')}), reducing team onboarding friction.`);
+  } else if (c.rawText.toLowerCase().includes('docker') || c.skills.some(s => s.toLowerCase().includes('docker'))) {
+    pros.push('Containerization & DevOps Literacy: Documented familiarity with Docker and modern deployment hygiene, accelerating cloud deployment workflows.');
+  }
+
+  // Pro D: Prior experience / industry exposure or academic diligence
+  if (c.experience && c.experience.length > 0) {
+    const exp = c.experience[0];
+    pros.push(`Prior Industry Exposure: Served as ${exp.title} at ${exp.company} (${exp.period || 'Prior experience'}), proving capability to collaborate in structured sprint workflows and team code reviews.`);
+  } else if (c.education.gpa && parseFloat(c.education.gpa) >= 8.5) {
+    pros.push(`Academic Rigor: Maintained a strong academic record (${c.education.gpa}) at ${c.education.institution}, evidencing disciplined problem-solving and rapid learning potential.`);
+  } else {
+    pros.push(`High Skill Density: Stated proficiency across ${c.skills.slice(0, 6).join(', ')}, showing wide-ranging engineering curiosity and adaptable tool acquisition.`);
+  }
+
+  // 3. Cons (Transparent, actionable watchouts and gaps)
+  const cons: string[] = [];
+
+  // Con A: Missing mandatory requirements
+  if (missingRequired.length > 0) {
+    cons.push(`Missing Mandatory Requirement(s): Resume lacks explicit evidence for ${missingRequired.join(', ')}. Candidate will need targeted technical screening or pairing support in these areas.`);
+  } else {
+    cons.push('Near-Complete Core Coverage: Meets all stated mandatory technical keywords, though depth in complex enterprise edge-cases should be confirmed in technical rounds.');
+  }
+
+  // Con B: Automated Testing & CI/CD
+  const hasTesting = /jest|cypress|mocha|testing|ci\/cd|github actions/i.test(c.rawText);
+  if (!hasTesting) {
+    cons.push('Limited Testing Documentation: Portfolio lacks explicit demonstration of unit testing suites (Jest, Cypress) or automated CI/CD deployment pipelines.');
+  }
+
+  // Con C: Commercial Experience Scale
+  if (!c.experience || c.experience.length === 0) {
+    cons.push('No Prior Corporate Internship: Track record is centered around academic and personal repositories; will require initial mentorship on team branching strategies and agile ceremonies.');
+  } else {
+    cons.push(`Internship Transition: Transitioning from ${c.experience[0].company} to ${targetOrg}'s specific architectural patterns may require 1-2 weeks of domain onboarding.`);
+  }
+
+  // Con D: Preferred skills unverified
+  const unverifiedPreferred = jd.preferredSkills.filter(ps => !matchedPreferred.includes(ps));
+  if (unverifiedPreferred.length > 0 && cons.length < 4) {
+    cons.push(`Unverified in Secondary Tools: No documented proof for nice-to-have items: ${unverifiedPreferred.slice(0, 3).join(', ')}.`);
+  }
+
+  // 4. Why the Recruiter Should Take Them for this Particular JD
+  let whyRecruiterShouldTakeThem = '';
+  if (rank === 1 || finalScore >= 80) {
+    whyRecruiterShouldTakeThem = `Recruiter Hiring Justification: ${c.name} is the top-tier match for the ${targetRole} opening at ${targetOrg}. Their portfolio directly validates the core stack (${matchedRequired.slice(0, 3).join(', ')}) through working project repositories like "${c.projects?.[0]?.title || 'Featured Project'}", eliminating the risk of paper-only resumes. Hiring them gives your engineering lead a dependable contributor who can pick up feature tickets in Week 1 with minimal supervisory overhead.`;
+  } else if (finalScore >= 65) {
+    whyRecruiterShouldTakeThem = `Recruiter Hiring Justification: ${c.name} represents a high-return, low-risk hiring opportunity for ${targetOrg}. While exhibiting a minor gap in ${missingRequired[0] || 'secondary tooling'}, their verified proficiency in ${matchedRequired.slice(0, 3).join(', ')} proves they possess the foundational horsepower to ramp up rapidly. They offer high motivation, proven coding velocity, and a clean project track record at a competitive internship level.`;
+  } else if (finalScore >= 50) {
+    whyRecruiterShouldTakeThem = `Recruiter Hiring Justification: Consider shortlisting ${c.name} if ${targetOrg} values high coachability and strong foundational logic over instant plug-and-play specialization. Their background in ${c.skills.slice(0, 3).join(', ')} provides a solid launching pad, and their hands-on project work confirms genuine interest in software craftsmanship.`;
+  } else {
+    whyRecruiterShouldTakeThem = `Recruiter Hiring Justification: ${c.name} is currently a secondary candidate for this specific ${targetRole} requisition due to missing core requirements (${missingRequired.slice(0, 2).join(', ')}). Retain on file for roles oriented toward ${c.skills.slice(0, 2).join(' or ')} where their background aligns more naturally.`;
+  }
+
+  // 5. Recommended Verdict
+  let recommendedVerdict: CandidateDetailedAnalysis['recommendedVerdict'] = 'Viable Contender';
+  if (finalScore >= 80 && missingRequired.length <= 1) {
+    recommendedVerdict = 'Strong Hire';
+  } else if (finalScore >= 68) {
+    recommendedVerdict = 'High Potential';
+  } else if (finalScore >= 52) {
+    recommendedVerdict = 'Viable Contender';
+  } else if (finalScore >= 40) {
+    recommendedVerdict = 'Skill Gap Watch';
+  } else {
+    recommendedVerdict = 'Not Recommended';
+  }
+
+  // 6. Key Differentiator
+  let keyDifferentiator = '';
+  if (rank === 1) {
+    keyDifferentiator = `Top composite score (${finalScore}%) pairing verified ${matchedRequired.slice(0, 3).join('/')} execution with practical multi-tier project architecture.`;
+  } else if (c.rawText.toLowerCase().includes('docker')) {
+    keyDifferentiator = 'Uncommon DevOps and containerization awareness for a student/intern candidate.';
+  } else if (c.experience && c.experience.length > 0) {
+    keyDifferentiator = `Proven real-world delivery at ${c.experience[0].company} giving them a significant head-start over purely academic peers.`;
+  } else if (c.projects && c.projects.length >= 2) {
+    keyDifferentiator = `Demonstrated multiple full-lifecycle project builds (${c.projects.map(p => p.title).slice(0, 2).join(' & ')}).`;
+  } else {
+    keyDifferentiator = `Strong academic foundation in ${c.education.degree} from ${c.education.institution}.`;
+  }
+
+  // 7. Ramp-Up Readiness
+  let rampUpReadiness = '';
+  if (finalScore >= 80) {
+    rampUpReadiness = `Immediate (Days 1–5) on primary ${matchedRequired.slice(0, 2).join(' and ')} tasks; ~1 week to acclimate to ${targetOrg}'s internal deployment pipelines.`;
+  } else if (finalScore >= 65) {
+    rampUpReadiness = `~1 to 2 weeks onboarding; rapid execution on ${matchedRequired.slice(0, 2).join(', ') || 'core code'}, with light mentoring on ${missingRequired[0] || 'team patterns'}.`;
+  } else {
+    rampUpReadiness = `~3 to 4 weeks onboarding required to bridge gaps in mandatory technologies (${missingRequired.slice(0, 2).join(', ')}).`;
+  }
+
+  // 8. Interview Probe Questions
+  const probeQuestions: string[] = [
+    c.projects && c.projects.length > 0
+      ? `In your project "${c.projects[0].title}", can you walk through your technical architecture and explain how you handled state management and API communication?`
+      : `Describe a challenging full-stack bug you encountered recently and walk us through your systematic debugging process.`,
+    missingRequired.length > 0
+      ? `This role at ${targetOrg} requires hands-on work with ${missingRequired[0]}. What is your existing exposure to it, and how would you ramp up within your first sprint?`
+      : `How do you approach writing clean, maintainable code and testing your endpoints before submitting a pull request?`,
+    `Walk us through a time you had to learn an unfamiliar library or framework under a tight project deadline. How did you prioritize what to study?`,
+  ];
+
+  return {
+    overview,
+    pros,
+    cons,
+    whyRecruiterShouldTakeThem,
+    recommendedVerdict,
+    keyDifferentiator,
+    rampUpReadiness,
+    interviewProbeQuestions: probeQuestions,
+    source: 'engine',
+  };
+}
+
 // Generate human-justified explanation for candidate ranking
 function generateRankingExplanation(
   rank: number,
@@ -437,7 +614,8 @@ function generateRankingExplanation(
   keywordScore: number,
   semanticScore: number,
   finalScore: number,
-  semanticMatches: SemanticMatchDetail[]
+  semanticMatches: SemanticMatchDetail[],
+  jd?: JobDescription
 ): {
   explanation: string;
   strengths: string[];
@@ -445,13 +623,15 @@ function generateRankingExplanation(
 } {
   const strengths: string[] = [];
   const areasToProbe: string[] = [];
+  const roleTitle = jd?.title || 'Target Role';
+  const org = jd?.company || 'our engineering team';
 
   // Identify strengths
   if (matchedRequired.includes('React') && matchedRequired.includes('Node.js')) {
-    strengths.push('Comprehensive JavaScript/TypeScript full-stack stack coverage across client and server');
+    strengths.push('Comprehensive JavaScript/TypeScript full-stack coverage across client and server');
   }
-  if (matchedRequired.includes('PostgreSQL')) {
-    strengths.push('Hands-on relational database modeling with PostgreSQL');
+  if (matchedRequired.includes('PostgreSQL') || matchedRequired.includes('SQL')) {
+    strengths.push('Hands-on relational database modeling and transactional querying');
   }
   if (matchedRequired.includes('Docker') || candidate.skills.includes('Docker')) {
     strengths.push('Containerization proficiency with Docker for microservice deployment');
@@ -459,12 +639,15 @@ function generateRankingExplanation(
   if (candidate.projects && candidate.projects.length >= 2) {
     strengths.push(`Proven end-to-end implementation across ${candidate.projects.length} distinct application portfolios`);
   }
+  if (candidate.experience && candidate.experience.length > 0) {
+    strengths.push(`Commercial internship experience at ${candidate.experience[0].company}`);
+  }
 
   // Identify missing areas / questions for recruiter
   if (missingRequired.length > 0) {
     areasToProbe.push(`Lacks explicit verification in required JD skills: ${missingRequired.join(', ')}`);
   }
-  if (!matchedRequired.includes('PostgreSQL') && !matchedRequired.includes('MongoDB')) {
+  if (!matchedRequired.includes('PostgreSQL') && !matchedRequired.includes('MongoDB') && !matchedRequired.includes('SQL')) {
     areasToProbe.push('Needs evaluation on database query optimization and relational schema design');
   }
   if (candidate.experience.length === 0) {
@@ -473,17 +656,17 @@ function generateRankingExplanation(
 
   let explanation = '';
   if (rank === 1) {
-    explanation = `Ranked #1 due to highest dual-engine score (${finalScore}%). Perfectly aligns with TechNova's core stack (React, Node.js, Express, PostgreSQL) backed by verified end-to-end project architecture and Dockerized deployment.`;
+    explanation = `Ranked #1 with highest dual-engine score (${finalScore}%). Seamlessly aligns with ${org}'s ${roleTitle} stack (${matchedRequired.slice(0, 4).join(', ')}) backed by verified project architecture and demonstrated coding depth.`;
   } else if (rank === 2) {
-    explanation = `Ranked #2 with strong ${finalScore}% match. Exceptional TypeScript and React depth with transactional PostgreSQL backend. Only slightly behind #1 due to fewer multi-service containerization examples.`;
+    explanation = `Ranked #2 with strong ${finalScore}% match. Exceptional technical breadth in ${matchedRequired.slice(0, 3).join(', ')}. Positioned just behind #1 due to minor specialization differences in deployment tooling.`;
   } else if (rank === 3) {
-    explanation = `Ranked #3 (${finalScore}%). Strong full-stack JavaScript portfolio demonstrating robust REST endpoints and database persistence. Well-suited for rapid onboarding into the engineering sprint.`;
+    explanation = `Ranked #3 (${finalScore}%). Strong portfolio demonstrating robust API development and verified fundamentals for ${roleTitle}. Turnkey candidate for sprint onboarding.`;
   } else if (finalScore >= 70) {
-    explanation = `Solid contender (${finalScore}%). Strong foundation in web development with good skill overlap, though missing minor preferred tools (${missingRequired.slice(0, 2).join(', ') || 'cloud tooling'}).`;
+    explanation = `Solid contender (${finalScore}%). Strong foundation for ${roleTitle} with good skill overlap, though missing minor tools (${missingRequired.slice(0, 2).join(', ') || 'cloud tooling'}).`;
   } else if (finalScore >= 50) {
-    explanation = `Partial fit (${finalScore}%). Shows competence in specialized domains (${matchedRequired.slice(0, 3).join(', ') || 'fundamentals'}), but exhibits notable gaps in the core full-stack stack.`;
+    explanation = `Partial fit (${finalScore}%). Shows competence in specialized domains (${matchedRequired.slice(0, 3).join(', ') || 'fundamentals'}), but exhibits notable gaps in mandatory role competencies.`;
   } else {
-    explanation = `Low alignment (${finalScore}%). Background is centered on non-web or non-software domains with major omissions in required full-stack technologies.`;
+    explanation = `Low alignment (${finalScore}%). Background diverges from core requirements for ${roleTitle} with notable omissions in required technologies.`;
   }
 
   return {
@@ -495,10 +678,11 @@ function generateRankingExplanation(
 
 // Complete Hybrid Shortlisting Evaluation
 export function evaluateCandidates(
-  jd: JobDescription,
-  candidates: CandidateResume[],
+  jd?: JobDescription | null,
+  candidates: CandidateResume[] = [],
   weights: ScoringWeights = { keywordWeight: 0.5, semanticWeight: 0.5, minScoreFilter: 0, mustHaveSkills: [] }
 ): CandidateMatchResult[] {
+  if (!jd || !candidates || candidates.length === 0) return [];
   const results: CandidateMatchResult[] = [];
 
   for (const candidate of candidates) {
@@ -558,7 +742,7 @@ export function evaluateCandidates(
     return b.semanticScore - a.semanticScore;
   });
 
-  // Assign ranks & generate human justifications
+  // Assign ranks & generate human justifications and in-depth candidate analysis
   results.forEach((result, idx) => {
     result.rank = idx + 1;
     const generated = generateRankingExplanation(
@@ -569,11 +753,25 @@ export function evaluateCandidates(
       result.keywordScore,
       result.semanticScore,
       result.finalScore,
-      result.semanticRelatedMatches
+      result.semanticRelatedMatches,
+      jd
     );
     result.explanation = generated.explanation;
     result.strengths = generated.strengths;
     result.areasToProbe = generated.areasToProbe;
+
+    // Build comprehensive, tailored pros, cons, overview & recruiter recommendation
+    result.detailedAnalysis = generateDetailedCandidateAnalysis(
+      jd,
+      result.candidate,
+      result.matchedExplicitSkills,
+      result.missingRequiredSkills,
+      result.preferredMatchedSkills,
+      result.keywordScore,
+      result.semanticScore,
+      result.finalScore,
+      result.rank
+    );
   });
 
   return results;
