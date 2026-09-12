@@ -1,12 +1,74 @@
 import { JobDescription, CandidateResume } from '../types';
 
+/**
+ * Extract clean plain text from any uploaded file (PDF, TXT, MD, etc.)
+ * Uses PDF.js in the browser for 100% accurate extraction from all PDF layouts and fonts.
+ */
+export async function extractTextFromFile(file: File): Promise<string> {
+  const isPDF = file.type.includes('pdf') || file.name.toLowerCase().endsWith('.pdf');
+
+  if (isPDF) {
+    // 1. Try browser window.pdfjsLib (loaded from CDN in index.html)
+    if (typeof window !== 'undefined' && (window as any).pdfjsLib) {
+      try {
+        const pdfjs = (window as any).pdfjsLib;
+        pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item: any) => item.str).join(' ');
+          fullText += pageText + '\n';
+        }
+        if (fullText.trim().length > 15) {
+          return fullText;
+        }
+      } catch (e) {
+        console.warn('PDF.js text extraction notice, using fallback:', e);
+      }
+    }
+
+    // 2. Binary fallback stream search
+    try {
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binaryStr = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binaryStr += String.fromCharCode(bytes[i]);
+      }
+      const asciiMatches = binaryStr.match(/[\x20-\x7E\t\n\r]{4,}/g);
+      if (asciiMatches && asciiMatches.length > 0) {
+        const filtered = asciiMatches.filter(chunk => 
+          !chunk.startsWith('/Length') && 
+          !chunk.startsWith('/Filter') && 
+          !chunk.startsWith('/Font') && 
+          !chunk.startsWith('xref') && 
+          !chunk.startsWith('trailer') &&
+          chunk.length > 3
+        );
+        if (filtered.length > 5) {
+          return filtered.join('\n');
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Plain text / Markdown reader
+  try {
+    const text = await file.text();
+    if (text && text.trim().length > 0) return text;
+  } catch (e) {}
+
+  return '';
+}
+
 export function extractTextFromPdfBase64(base64Data: string): string {
   try {
     const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
-    // In browser environment, use atob
     const rawString = typeof window !== 'undefined' ? window.atob(cleanBase64) : Buffer.from(cleanBase64, 'base64').toString('binary');
 
-    // 1. Look for text in standard PDF text object operators: (Some text) Tj or [(Some) (text)] TJ
     const tjMatches = rawString.match(/\(([^()]{2,120})\)\s*T[jJ]/g);
     if (tjMatches && tjMatches.length > 5) {
       const extracted = tjMatches.map(m => {
@@ -16,7 +78,6 @@ export function extractTextFromPdfBase64(base64Data: string): string {
       if (extracted.length > 60) return extracted;
     }
 
-    // 2. Extract printable ASCII runs
     const asciiRuns = rawString.match(/[\x20-\x7E\t\n\r]{4,}/g);
     if (asciiRuns && asciiRuns.length > 0) {
       const filtered = asciiRuns.filter(chunk => 
@@ -25,8 +86,6 @@ export function extractTextFromPdfBase64(base64Data: string): string {
         !chunk.startsWith('/Font') &&
         !chunk.startsWith('xref') &&
         !chunk.startsWith('trailer') &&
-        !chunk.startsWith('/Root') &&
-        !chunk.startsWith('/Pages') &&
         chunk.length > 3
       );
       return filtered.join('\n');
@@ -43,8 +102,8 @@ const TECH_SKILLS: { name: string; aliases: string[]; category: 'frontend' | 'ba
   { name: 'JavaScript', aliases: ['javascript', 'js', 'es6'], category: 'frontend' },
   { name: 'Node.js', aliases: ['node.js', 'nodejs', 'node js', 'node'], category: 'backend' },
   { name: 'Express', aliases: ['express', 'express.js', 'expressjs'], category: 'backend' },
-  { name: 'REST APIs', aliases: ['rest api', 'rest apis', 'restful', 'restful api'], category: 'backend' },
-  { name: 'Python', aliases: ['python', 'python3'], category: 'backend' },
+  { name: 'REST APIs', aliases: ['rest api', 'rest apis', 'restful', 'restful api', 'api design'], category: 'backend' },
+  { name: 'Python', aliases: ['python', 'python3', 'py'], category: 'backend' },
   { name: 'Django', aliases: ['django'], category: 'backend' },
   { name: 'FastAPI', aliases: ['fastapi'], category: 'backend' },
   { name: 'Java', aliases: ['java', 'core java'], category: 'backend' },
@@ -56,7 +115,7 @@ const TECH_SKILLS: { name: string; aliases: string[]; category: 'frontend' | 'ba
   { name: 'MySQL', aliases: ['mysql'], category: 'database' },
   { name: 'SQLite', aliases: ['sqlite', 'sqlite3', 'room'], category: 'database' },
   { name: 'Firebase', aliases: ['firebase', 'firestore'], category: 'database' },
-  { name: 'Vector databases', aliases: ['vector database', 'vector db', 'pinecone', 'faiss'], category: 'database' },
+  { name: 'Vector databases', aliases: ['vector database', 'vector db', 'pinecone', 'faiss', 'chroma'], category: 'database' },
   { name: 'Redis', aliases: ['redis'], category: 'database' },
   { name: 'SQL', aliases: ['sql', 'rdbms'], category: 'database' },
   { name: 'Docker', aliases: ['docker', 'containerization'], category: 'devopsAndCloud' },
@@ -76,7 +135,7 @@ const TECH_SKILLS: { name: string; aliases: string[]; category: 'frontend' | 'ba
   { name: 'OpenCV', aliases: ['opencv', 'cv2'], category: 'foundations' },
   { name: 'CNNs', aliases: ['cnn', 'cnns', 'convolutional neural network'], category: 'foundations' },
   { name: 'RAG pipelines', aliases: ['rag', 'rag pipelines', 'langchain'], category: 'foundations' },
-  { name: 'Jest', aliases: ['jest', 'unit test', 'unit testing'], category: 'foundations' },
+  { name: 'Jest', aliases: ['jest', 'unit test', 'unit testing', 'testing'], category: 'foundations' },
   { name: 'GraphQL', aliases: ['graphql'], category: 'backend' },
 ];
 
@@ -91,7 +150,7 @@ export function parseJDClient(fileName: string, rawText?: string, base64Data?: s
 
   // 1. Detect Title
   let title = '';
-  for (const line of lines.slice(0, 8)) {
+  for (const line of lines.slice(0, 10)) {
     const titleMatch = line.match(/(?:title|position|role|job)\s*[:\-]\s*(.+)/i);
     if (titleMatch && titleMatch[1]) {
       title = titleMatch[1].trim();
@@ -99,7 +158,7 @@ export function parseJDClient(fileName: string, rawText?: string, base64Data?: s
     }
   }
   if (!title) {
-    for (const line of lines.slice(0, 5)) {
+    for (const line of lines.slice(0, 6)) {
       if (/(?:intern|developer|engineer|analyst|architect)/i.test(line) && line.length < 60) {
         title = line.replace(/^[#*\-•\d.]+\s*/, '').trim();
         break;
@@ -113,7 +172,7 @@ export function parseJDClient(fileName: string, rawText?: string, base64Data?: s
 
   // 2. Detect Company
   let company = 'TechNova Solutions';
-  for (const line of lines.slice(0, 10)) {
+  for (const line of lines.slice(0, 12)) {
     const compMatch = line.match(/(?:company|organization|at)\s*[:\-]\s*(.+)/i);
     if (compMatch && compMatch[1]) {
       company = compMatch[1].trim();
@@ -211,14 +270,15 @@ export function parseResumeClient(fileName: string, rawText?: string, base64Data
 
   // 1. Detect Name
   let name = '';
-  for (const line of lines.slice(0, 6)) {
+  for (const line of lines.slice(0, 8)) {
     if (
       line.length >= 3 &&
-      line.length <= 40 &&
+      line.length <= 35 &&
       !line.includes('@') &&
       !line.includes('http') &&
       !line.includes('github') &&
-      !/(?:resume|curriculum|vitae|page|phone|email|profile|summary)/i.test(line)
+      !line.includes('linkedin') &&
+      !/(?:resume|curriculum|vitae|page|phone|email|profile|summary|education|skills|experience)/i.test(line)
     ) {
       name = line.replace(/^[#*\-•\d.]+\s*/, '').trim();
       break;

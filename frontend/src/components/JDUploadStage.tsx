@@ -8,7 +8,7 @@ import {
   FolderSync
 } from 'lucide-react';
 import { JobDescription } from '../types';
-import { parseJDClient } from '../services/clientParser';
+import { parseJDClient, extractTextFromFile } from '../services/clientParser';
 
 interface JDUploadStageProps {
   jobDescription: JobDescription;
@@ -69,47 +69,24 @@ export const JDUploadStage: React.FC<JDUploadStageProps> = ({
     progressId: string
   ): Promise<JobDescription | null> => {
     const isPDF = file.type.includes('pdf') || file.name.toLowerCase().endsWith('.pdf');
-    const isText = file.type.includes('text') || file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.md');
+    const extractedText = await extractTextFromFile(file);
 
-    let payload: { fileName: string; fileType: string; rawText?: string; base64Data?: string };
-
+    let base64Data: string | undefined;
     if (isPDF) {
-      const base64Data = await new Promise<string>((resolve, reject) => {
+      base64Data = await new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve((e.target?.result as string) || '');
-        reader.onerror = reject;
+        reader.onerror = () => resolve('');
         reader.readAsDataURL(file);
       });
-      payload = {
-        fileName: file.name,
-        fileType: 'application/pdf',
-        base64Data,
-      };
-    } else if (isText) {
-      const text = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve((e.target?.result as string) || '');
-        reader.onerror = reject;
-        reader.readAsText(file);
-      });
-      payload = {
-        fileName: file.name,
-        fileType: file.type || 'text/plain',
-        rawText: text,
-      };
-    } else {
-      const content = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve((e.target?.result as string) || '');
-        reader.onerror = reject;
-        reader.readAsText(file);
-      });
-      payload = {
-        fileName: file.name,
-        fileType: file.type || 'application/octet-stream',
-        rawText: content,
-      };
     }
+
+    const payload: { fileName: string; fileType: string; rawText?: string; base64Data?: string } = {
+      fileName: file.name,
+      fileType: isPDF ? 'application/pdf' : file.type || 'text/plain',
+      rawText: extractedText,
+      base64Data,
+    };
 
     // Update status to analyzing
     setBatchQueue(prev => prev.map(item => 
