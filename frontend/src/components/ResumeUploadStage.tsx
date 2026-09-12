@@ -53,67 +53,69 @@ export const ResumeUploadStage: React.FC<ResumeUploadStageProps> = ({
     const fileNames = files.map(f => f.name);
     setUploadingFiles(fileNames);
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      setCurrentParsingName(file.name);
+    const isLocal = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-      try {
-        const isPDF = file.type.includes('pdf') || file.name.toLowerCase().endsWith('.pdf');
-        let payload: { fileName: string; fileType: string; rawText?: string; base64Data?: string };
+    await Promise.all(
+      files.map(async (file) => {
+        setCurrentParsingName(file.name);
+        try {
+          const isPDF = file.type.includes('pdf') || file.name.toLowerCase().endsWith('.pdf');
+          let rawText = '';
+          let base64Data = '';
 
-        if (isPDF) {
-          const base64Data = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve((e.target?.result as string) || '');
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-          payload = {
-            fileName: file.name,
-            fileType: 'application/pdf',
-            base64Data,
-          };
-        } else {
-          const text = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve((e.target?.result as string) || '');
-            reader.onerror = reject;
-            reader.readAsText(file);
-          });
-          payload = {
-            fileName: file.name,
-            fileType: file.type || 'text/plain',
-            rawText: text,
-          };
-        }
-
-        const response = await fetch('/api/parse-resume-file', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            onAddCandidate(result.data);
-            continue;
+          if (isPDF) {
+            base64Data = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = (e) => resolve((e.target?.result as string) || '');
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            rawText = extractTextFromPdfBase64Client(base64Data);
+          } else {
+            rawText = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = (e) => resolve((e.target?.result as string) || '');
+              reader.onerror = reject;
+              reader.readAsText(file);
+            });
           }
-        }
 
-        throw new Error(`Server returned ${response.status}`);
-      } catch (err) {
-        console.warn(`Server resume parser unavailable, using client-side engine for ${file.name}:`, err);
-        let rawText = '';
-        if (payload?.rawText) {
-          rawText = payload.rawText;
-        } else if (payload?.base64Data) {
-          rawText = extractTextFromPdfBase64Client(payload.base64Data);
+          // If running on localhost with backend active, try server API with 1.5s timeout
+          if (isLocal) {
+            try {
+              const response = await fetch('/api/parse-resume-file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  fileName: file.name,
+                  fileType: isPDF ? 'application/pdf' : 'text/plain',
+                  rawText,
+                  base64Data: isPDF ? base64Data : undefined,
+                }),
+                signal: AbortSignal.timeout(1500),
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data) {
+                  onAddCandidate(result.data);
+                  return;
+                }
+              }
+            } catch {
+              // Proceed immediately to client-side parser
+            }
+          }
+
+          // Instant client-side parser (0ms network delay, extracts real skills & education)
+          const clientCandidate = runClientResumeParser(file.name, rawText);
+          onAddCandidate(clientCandidate);
+        } catch (err) {
+          console.warn(`Error parsing ${file.name}:`, err);
         }
-        const clientCandidate = runClientResumeParser(file.name, rawText);
-        onAddCandidate(clientCandidate);
-      }
-    }
+      })
+    );
 
     setCurrentParsingName(null);
     setUploadingFiles([]);

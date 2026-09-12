@@ -118,22 +118,28 @@ export const JDUploadStage: React.FC<JDUploadStageProps> = ({
 
     let parsed: any = null;
 
-    // 1. Try server endpoint first (e.g. localhost Express or backend)
-    try {
-      const response = await fetch('/api/parse-jd-file', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+    const isLocal = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          parsed = result.data;
+    // 1. Try server endpoint only when running on localhost with backend
+    if (isLocal) {
+      try {
+        const response = await fetch('/api/parse-jd-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(1500),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            parsed = result.data;
+          }
         }
+      } catch (apiErr) {
+        console.warn('Server JD parser unavailable, using client-side engine:', apiErr);
       }
-    } catch (apiErr) {
-      console.warn('Server JD parser unavailable, using client-side engine:', apiErr);
     }
 
     // 2. Client-side parser fallback (for Vercel, static hosting, or offline)
