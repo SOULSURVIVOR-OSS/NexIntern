@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Upload, FileText, Trash2, Plus, Sparkles, ArrowRight, ArrowLeft, Users, AlertCircle, RotateCcw } from 'lucide-react';
 import { CandidateResume, JobDescription } from '../types';
-import { parseResumeClient } from '../services/clientParser';
+import { parseResumeClient, extractTextFromFile } from '../services/clientParser';
 
 interface ResumeUploadStageProps {
   jobDescription: JobDescription;
@@ -57,35 +57,31 @@ export const ResumeUploadStage: React.FC<ResumeUploadStageProps> = ({
       const file = files[i];
       setCurrentParsingName(file.name);
 
+      let payload: { fileName: string; fileType: string; rawText?: string; base64Data?: string } = {
+        fileName: file.name,
+        fileType: file.type || 'text/plain',
+      };
+
       try {
         const isPDF = file.type.includes('pdf') || file.name.toLowerCase().endsWith('.pdf');
-        let payload: { fileName: string; fileType: string; rawText?: string; base64Data?: string };
+        const extractedText = await extractTextFromFile(file);
 
+        let base64Data: string | undefined;
         if (isPDF) {
-          const base64Data = await new Promise<string>((resolve, reject) => {
+          base64Data = await new Promise<string>((resolve) => {
             const reader = new FileReader();
             reader.onload = (e) => resolve((e.target?.result as string) || '');
-            reader.onerror = reject;
+            reader.onerror = () => resolve('');
             reader.readAsDataURL(file);
           });
-          payload = {
-            fileName: file.name,
-            fileType: 'application/pdf',
-            base64Data,
-          };
-        } else {
-          const text = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve((e.target?.result as string) || '');
-            reader.onerror = reject;
-            reader.readAsText(file);
-          });
-          payload = {
-            fileName: file.name,
-            fileType: file.type || 'text/plain',
-            rawText: text,
-          };
         }
+
+        payload = {
+          fileName: file.name,
+          fileType: isPDF ? 'application/pdf' : file.type || 'text/plain',
+          rawText: extractedText,
+          base64Data,
+        };
 
         const response = await fetch('/api/parse-resume-file', {
           method: 'POST',
@@ -104,7 +100,7 @@ export const ResumeUploadStage: React.FC<ResumeUploadStageProps> = ({
         throw new Error(`Server returned ${response.status}`);
       } catch (err) {
         console.warn(`API parsing unavailable for ${file.name}, using client parser:`, err);
-        const candidate = parseResumeClient(file.name, payload?.rawText, payload?.base64Data);
+        const candidate = parseResumeClient(file.name, payload.rawText, payload.base64Data);
         onAddCandidate(candidate);
       }
     }

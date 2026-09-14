@@ -1234,8 +1234,8 @@ CERTIFICATIONS
   },
   {
     id: 'cand-22',
-    name: 'Tanvi Joshi',
-    email: 'tanvi.joshi.app@gmail.com',
+    name: 'Tanvi Kulkarni',
+    email: 'tanvi.kulkarni.app@gmail.com',
     phone: '+91 91111 22233',
     location: 'Pune, India',
     education: {
@@ -1284,9 +1284,9 @@ CERTIFICATIONS
         description: 'React Native app for college event discovery with Firebase backend and RSVP functionality.'
       }
     ],
-    rawText: `Tanvi Joshi
+    rawText: `Tanvi Kulkarni
 Mobile App Developer
-Pune, India | +91 91111 22233 | tanvi.joshi.app@gmail.com | linkedin.com/in/tanvijoshi-app
+Pune, India | +91 91111 22233 | tanvi.kulkarni.app@gmail.com | linkedin.com/in/tanvikulkarni-app
 
 PROFESSIONAL SUMMARY
 Mobile App Developer with 3 years building cross-platform apps using Flutter and React Native, focused on smooth UX and performance.

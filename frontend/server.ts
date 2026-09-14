@@ -3,6 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import { PDFParse } from "pdf-parse";
 
 dotenv.config();
 
@@ -110,7 +111,7 @@ app.post("/api/parse-jd-file", async (req, res) => {
 
     let effectiveRawText = rawText || "";
     if (!effectiveRawText && base64Data) {
-      effectiveRawText = extractTextFromPdfBase64(base64Data);
+      effectiveRawText = await extractTextFromPdfBase64(base64Data);
     }
 
     const ai = getGeminiClient();
@@ -209,7 +210,7 @@ app.post("/api/parse-resume-file", async (req, res) => {
 
     let effectiveRawText = rawText || "";
     if (!effectiveRawText && base64Data) {
-      effectiveRawText = extractTextFromPdfBase64(base64Data);
+      effectiveRawText = await extractTextFromPdfBase64(base64Data);
     }
 
     // 1. Try Python FastAPI PyMuPDF backend first if running
@@ -805,13 +806,26 @@ All top 3 candidates satisfy both core requirements and possess practical GitHub
   - *"Give me a summary of the top 3 shortlist."*`;
 }
 
-function extractTextFromPdfBase64(base64Data: string): string {
+async function extractTextFromPdfBase64(base64Data: string): Promise<string> {
   try {
     const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, "");
     const buffer = Buffer.from(cleanBase64, "base64");
+
+    // 1. High-fidelity extraction via PDFParse
+    try {
+      const parser = new PDFParse({ data: buffer });
+      const parsedText = await parser.getText();
+      if (parsedText && typeof parsedText.text === "string" && parsedText.text.trim().length > 15) {
+        return parsedText.text.trim();
+      }
+    } catch (parseErr) {
+      console.warn("PDFParse library extraction notice, attempting fallback:", parseErr);
+    }
+
+    // 2. Binary fallback stream search
     const rawString = buffer.toString("binary");
 
-    // 1. Look for text in standard PDF text object operators: (Some text) Tj or [(Some) (text)] TJ
+    // Look for text in standard PDF text object operators: (Some text) Tj or [(Some) (text)] TJ
     const tjMatches = rawString.match(/\(([^()]{2,120})\)\s*T[jJ]/g);
     if (tjMatches && tjMatches.length > 5) {
       const extracted = tjMatches.map(m => {
@@ -821,7 +835,7 @@ function extractTextFromPdfBase64(base64Data: string): string {
       if (extracted.length > 60) return extracted;
     }
 
-    // 2. Extract printable ASCII runs (length >= 4) from the stream
+    // Extract printable ASCII runs (length >= 4) from the stream
     const asciiRuns = rawString.match(/[\x20-\x7E\t\n\r]{4,}/g);
     if (asciiRuns && asciiRuns.length > 0) {
       const filtered = asciiRuns.filter(chunk => 

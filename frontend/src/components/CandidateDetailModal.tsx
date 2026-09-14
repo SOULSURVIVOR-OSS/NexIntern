@@ -51,15 +51,11 @@ export const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
   const c = candidate.candidate;
   const analysis = liveAnalysis || candidate.detailedAnalysis;
 
-  // Calculate experience relevance score
+  // Calculate required skill match percentage
   const totalRequired = candidate.matchedExplicitSkills.length + candidate.missingRequiredSkills.length;
   const requiredMatchPercent = totalRequired > 0
     ? Math.round((candidate.matchedExplicitSkills.length / totalRequired) * 100)
     : 0;
-
-  const experienceRelevance = Math.round(
-    (candidate.semanticScore * 0.5) + (candidate.keywordScore * 0.3) + (requiredMatchPercent * 0.2)
-  );
 
   const targetRole = jobDescription?.title || 'Full Stack Developer Intern';
   const targetCompany = jobDescription?.company || 'TechNova Solutions';
@@ -591,13 +587,13 @@ ${analysis.interviewProbeQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
 
                   <div className="bg-[#fbfbfd] dark:bg-[#20232b] p-3.5 rounded-2xl border border-black/[0.05] dark:border-white/[0.06]">
                     <span className="text-[11px] text-slate-500 dark:text-[#a1a1a6] block font-medium mb-1">
-                      Experience Relevance
+                      Overall Fit
                     </span>
                     <span className="text-xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7] block">
-                      {experienceRelevance}%
+                      {candidate.finalScore}%
                     </span>
                     <div className="w-full bg-slate-200 dark:bg-white/[0.1] h-1.5 rounded-full mt-2 overflow-hidden">
-                      <div className="bg-slate-800 dark:bg-slate-300 h-full rounded-full" style={{ width: `${experienceRelevance}%` }} />
+                      <div className="bg-slate-900 dark:bg-white h-full rounded-full" style={{ width: `${candidate.finalScore}%` }} />
                     </div>
                   </div>
                 </div>
