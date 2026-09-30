@@ -1,4 +1,5 @@
 import React from 'react';
+import { NexInternLogo } from './NexInternLogo';
 import { Cpu, ShieldAlert, GitCompare, MessageSquare, Download, FileText } from 'lucide-react';
 
 interface HeaderProps {
@@ -30,26 +31,15 @@ export const Header: React.FC<HeaderProps> = ({
         
         {/* Brand */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50 border border-emerald-100 p-1">
-            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-              <path d="M7 29C13 26 18 27.5 20 30C22 27.5 27 26 33 29V32C27 29 22 30.5 20 33C18 30.5 13 29 7 32V29Z" fill="#0d9488" />
-              <path d="M20 23V30" stroke="#78350f" strokeWidth="2" strokeLinecap="round" />
-              <path d="M20 18V23M20 20L15 16M20 19L25 15M20 15L17 12M20 14L23 11" stroke="#854d0e" strokeWidth="1.6" strokeLinecap="round" />
-              <circle cx="20" cy="9" r="3.2" fill="#059669" />
-              <circle cx="14" cy="13" r="2.8" fill="#10b981" />
-              <circle cx="26" cy="12" r="2.8" fill="#047857" />
-              <circle cx="11" cy="18" r="2.2" fill="#f59e0b" />
-              <circle cx="29" cy="17" r="2.2" fill="#14b8a6" />
-              <circle cx="17" cy="7" r="2" fill="#34d399" />
-              <circle cx="23" cy="7" r="2" fill="#f97316" />
-            </svg>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 border border-slate-200 p-1">
+            <NexInternLogo className="w-full h-full" />
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-base font-extrabold tracking-tight text-[#0a664e]">
-              INTERNLOOM
+            <span className="text-base font-extrabold tracking-tight text-[#0d2b56]">
+              NEXINTERN
             </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 hidden sm:inline-block">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200 hidden sm:inline-block">
               {totalCandidates} Applicants
             </span>
           </div>

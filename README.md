@@ -1,4 +1,4 @@
-# InternLoom AI — Intelligent Candidate Shortlisting Engine
+# NexIntern — Intelligent Candidate Shortlisting Engine
 
 A full-stack, local AI campus recruitment engine that combines **deep local semantic sentence embeddings** (`BAAI/bge-small-en-v1.5`), **PyMuPDF PDF parsing**, and **multi-tier keyword matching** (BM25 + TF-IDF + Skills Ontology) with an **Apple-inspired interactive web frontend**.
 
@@ -146,9 +146,9 @@ npm run dev
 ├── run_frontend.sh              # 1-click script to run frontend
 └── README.md                    # System documentation
 ```
-# InternLoom-AI
-# InternLoom-AI
-# InternLoom-AI
-# InternLoom-AI
-# InternLoom-AI
-# InternLoom-AI
+# NexIntern-AI
+# NexIntern-AI
+# NexIntern-AI
+# NexIntern-AI
+# NexIntern-AI
+# NexIntern-AI

@@ -22,8 +22,8 @@ export const RecruiterChatDrawer: React.FC<RecruiterChatDrawerProps> = ({
       id: 'welcome',
       sender: 'assistant',
       text: candidates.length > 0
-        ? `Hello! I am your **InternLoom AI Recruiter Assistant**. I have analyzed all ${candidates.length} candidate resumes against **${jd.title}**.\n\nFeel free to ask me anything about the candidate pool, such as:\n- *"Why is ${candidates[0]?.candidate.name || 'Candidate #1'} ranked higher than ${candidates[1]?.candidate.name || 'Candidate #2'}?"*\n- *"Which candidate is best for backend engineering?"*\n- *"Does any candidate have production React experience?"*`
-        : `Hello! I am your **InternLoom AI Recruiter Assistant**. The candidate pool is currently empty. Once you upload candidate resumes in the Resumes stage, you can ask me to evaluate skills, compare candidates, or assess role fit for **${jd.title}**.`,
+        ? `Hello! I am your **NexIntern AI Recruiter Assistant**. I have analyzed all ${candidates.length} candidate resumes against **${jd.title}**.\n\nFeel free to ask me anything about the candidate pool, such as:\n- *"Why is ${candidates[0]?.candidate.name || 'Candidate #1'} ranked higher than ${candidates[1]?.candidate.name || 'Candidate #2'}?"*\n- *"Which candidate is best for backend engineering?"*\n- *"Does any candidate have production React experience?"*`
+        : `Hello! I am your **NexIntern AI Recruiter Assistant**. The candidate pool is currently empty. Once you upload candidate resumes in the Resumes stage, you can ask me to evaluate skills, compare candidates, or assess role fit for **${jd.title}**.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { NexInternLogo } from './NexInternLogo';
 import { Sparkles, Sliders, ShieldCheck, GitCompare, MessageSquare, ArrowRight, Menu, X, RotateCcw, Cpu, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -34,12 +35,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onStageChange('landing')}
             className="flex items-center gap-2.5 group text-left focus:outline-none cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#1d1d1f] to-[#3a3a3c] dark:from-[#2c2d33] dark:to-[#43454f] flex items-center justify-center text-white shadow-xs group-hover:scale-[1.03] transition-transform">
-              <Sparkles className="w-4 h-4 text-sky-400" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#1d1d1f] to-[#3a3a3c] dark:from-[#2c2d33] dark:to-[#43454f] flex items-center justify-center p-1 shadow-xs group-hover:scale-[1.03] transition-transform">
+              <NexInternLogo className="w-5 h-5" />
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
-                InternLoom <span className="font-normal text-slate-500 dark:text-[#86868b]">AI</span>
+                NexIntern <span className="font-normal text-slate-500 dark:text-[#86868b]">AI</span>
               </span>
               <span className="text-[10px] text-slate-500 dark:text-[#86868b] font-medium tracking-wide">
                 Smart Shortlisting Engine

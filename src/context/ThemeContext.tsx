@@ -14,7 +14,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('internloom_theme') as Theme;
+      const saved = localStorage.getItem('nexintern_theme') || localStorage.getItem('internloom_theme') as Theme;
       if (saved === 'dark' || saved === 'light') return saved;
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         return 'dark';
@@ -33,7 +33,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.style.colorScheme = 'light';
     }
     try {
-      localStorage.setItem('internloom_theme', theme);
+      localStorage.setItem('nexintern_theme', theme);
     } catch {
       // ignore storage write errors
     }

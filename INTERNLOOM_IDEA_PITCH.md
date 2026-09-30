@@ -1,4 +1,4 @@
-# InternLoom AI — Executive Idea Pitch & Project Overview
+# NexIntern — Executive Idea Pitch & Project Overview
 
 > **Tagline:** *"Find the right candidate. Not just the right keywords."*  
 > **Category:** AI / HRTech / Campus Recruitment / Next-Gen Placement  
@@ -12,7 +12,7 @@ Most automated resume screeners fail in one of two extremes:
 1. **Traditional ATS keyword scanners** blindly look for exact keyword matches, rejecting brilliant students who describe skills differently (e.g. *FastAPI* vs *REST APIs*, *Node* vs *Node.js*) or made minor formatting typos.
 2. **Generic LLM wrappers** ask ChatGPT or Claude to *"grade this resume out of 100"*, resulting in arbitrary scores, black-box hallucinations, non-reproducible decisions, and major privacy leaks.
 
-**InternLoom AI** introduces a **groundbreaking, dual-engine hybrid shortlisting engine**:
+**NexIntern** introduces a **groundbreaking, dual-engine hybrid shortlisting engine**:
 It mathematically pairs **local vector semantic embeddings (`BAAI/bge-small-en-v1.5`)** with **BM25 token relevance & skills ontology matching**, wrapped in an Apple-inspired recruiter interface with live dynamic weight controls and automated HR bias auditing.
 
 ---
@@ -26,9 +26,9 @@ It mathematically pairs **local vector semantic embeddings (`BAAI/bge-small-en-v
 
 ---
 
-## ⚙️ 3. How InternLoom AI Solves It (The Architecture)
+## ⚙️ 3. How NexIntern Solves It (The Architecture)
 
-InternLoom AI operates on a **mathematically transparent, dual-engine pipeline**:
+NexIntern operates on a **mathematically transparent, dual-engine pipeline**:
 
 ```
                          [ Candidate Resume PDF ]
@@ -102,7 +102,7 @@ $$\text{Final Score} = \left[ w_{\text{keyword}} \times \text{Score}_{\text{BM25
 
 ## 🚀 6. Hackathon Pitch Checklist
 
-| Dimension | Hackathon Evaluation Rubric | InternLoom AI Implementation |
+| Dimension | Hackathon Evaluation Rubric | NexIntern Implementation |
 | :--- | :--- | :--- |
 | **Technical Innovation** | Dual-Engine Synergy | Combined BM25Okapi, TF-IDF, and local BGE sentence embeddings |
 | **Engineering Rigor** | Full-Stack Execution | Python FastAPI + React 19 + TypeScript + Express + Vite |

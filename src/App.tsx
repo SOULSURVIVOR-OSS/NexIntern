@@ -26,7 +26,7 @@ export default function App() {
   // 2. Core Model State (Preserving all logic & data, with multi-JD state & persistence)
   const [allJobDescriptions, setAllJobDescriptions] = useState<JobDescription[]>(() => {
     try {
-      const saved = localStorage.getItem('internloom_job_descriptions');
+      const saved = localStorage.getItem('nexintern_job_descriptions') || localStorage.getItem('internloom_job_descriptions');
       if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
@@ -46,7 +46,7 @@ export default function App() {
   // Sync allJobDescriptions to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('internloom_job_descriptions', JSON.stringify(allJobDescriptions));
+      localStorage.setItem('nexintern_job_descriptions', JSON.stringify(allJobDescriptions));
     } catch (e) {
       console.error('Error saving job descriptions', e);
     }
@@ -59,7 +59,7 @@ export default function App() {
     } catch (e) {}
 
     try {
-      const saved = sessionStorage.getItem('internloom_session_candidates');
+      const saved = sessionStorage.getItem('nexintern_session_candidates') || sessionStorage.getItem('internloom_session_candidates');
       if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -75,7 +75,7 @@ export default function App() {
   // Sync candidates to sessionStorage (automatically deleted when the browser/tab is closed)
   useEffect(() => {
     try {
-      sessionStorage.setItem('internloom_session_candidates', JSON.stringify(candidates));
+      sessionStorage.setItem('nexintern_session_candidates', JSON.stringify(candidates));
     } catch (e) {
       console.error('Error saving session candidates', e);
     }

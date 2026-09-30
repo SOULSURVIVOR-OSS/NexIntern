@@ -63,7 +63,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
           className="mt-6 text-base sm:text-xl text-slate-600 dark:text-[#a1a1a6] max-w-2xl mx-auto font-normal leading-relaxed"
         >
-          InternLoom AI combines semantic understanding with explicit skill matching to intelligently rank candidates against any job description.
+          NexIntern combines semantic understanding with explicit skill matching to intelligently rank candidates against any job description.
         </motion.p>
 
         {/* CTA Buttons */}

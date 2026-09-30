@@ -42,7 +42,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
     {
       num: '02',
       tag: 'ANALYZE',
-      title: 'InternLoom AI combines keyword and semantic understanding.',
+      title: 'NexIntern combines keyword and semantic understanding.',
       description: 'Unlike black-box LLMs, our dual-engine architecture computes deterministic BM25 lexical precision alongside domain-aware semantic embedding proximity.',
       icon: Cpu,
       accent: 'from-indigo-50 to-purple-50 text-indigo-600 border-indigo-100 dark:from-indigo-950/50 dark:to-purple-950/50 dark:text-indigo-400 dark:border-indigo-800/60',

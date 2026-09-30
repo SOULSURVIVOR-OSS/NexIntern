@@ -230,7 +230,7 @@ export const ShortlistSection: React.FC<ShortlistSectionProps> = ({
     link.setAttribute('href', encodedUri);
     link.setAttribute(
       'download',
-      `InternLoom_Shortlist_${jobDescription.title.replace(/\s+/g, '_')}.csv`
+      `NexIntern_Shortlist_${jobDescription.title.replace(/\s+/g, '_')}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -874,7 +874,7 @@ export const ShortlistSection: React.FC<ShortlistSectionProps> = ({
 
       {/* Footer */}
       <footer className="mt-16 pt-8 border-t border-black/[0.05] dark:border-white/[0.06] text-center text-xs text-slate-400 dark:text-[#86868b]">
-        <p>InternLoom AI • Intelligent Shortlisting Engine</p>
+        <p>NexIntern AI • Intelligent Shortlisting Engine</p>
       </footer>
     </section>
   );

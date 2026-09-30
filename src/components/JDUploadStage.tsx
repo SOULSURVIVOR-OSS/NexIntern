@@ -312,7 +312,7 @@ export const JDUploadStage: React.FC<JDUploadStageProps> = ({
           Upload Job Descriptions for Different Roles
         </h2>
         <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-[#a1a1a6] max-w-2xl mx-auto">
-          Upload one or multiple Job Description PDFs at once. InternLoom AI extracts the unique requirements for each role, allowing you to instantly switch benchmarks and evaluate candidate resumes.
+          Upload one or multiple Job Description PDFs at once. NexIntern extracts the unique requirements for each role, allowing you to instantly switch benchmarks and evaluate candidate resumes.
         </p>
       </div>
 

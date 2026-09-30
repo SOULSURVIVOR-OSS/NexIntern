@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" fill="none">
+  <!-- Shape 1: Top-Left Navy Blue -->
+  <polygon points="12.0,7.3 36.0,24.1 36.0,53.1 12.0,36.3" fill="#0d2b56" />
+  <!-- Shape 2: Bottom-Left Navy Blue -->
+  <polygon points="12.0,73.5 36.0,90.3 36.0,114.3 12.0,97.5" fill="#0d2b56" />
+  <!-- Shape 3: Center Diagonal Navy Blue -->
+  <polygon points="36.0,56.7 60.0,73.5 60.0,103.5 36.0,86.7" fill="#0d2b56" />
+  <!-- Shape 4: Top-Right Crimson Red -->
+  <polygon points="63.0,18.0 87.0,34.8 87.0,88.8 63.0,72.0" fill="#c5222f" />
+  <!-- Shape 5: Bottom-Right Crimson Red -->
+  <polygon points="63.0,75.6 87.0,92.4 87.0,122.4 63.0,105.6" fill="#c5222f" />
+</svg>

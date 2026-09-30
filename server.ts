@@ -424,7 +424,7 @@ app.post("/api/recruiter-chat", async (req, res) => {
     const ai = getGeminiClient();
     if (ai) {
       try {
-        const prompt = `You are InternLoom's AI Placement Auditor and Recruiter Assistant.
+        const prompt = `You are NexIntern's AI Placement Auditor and Recruiter Assistant.
 You have access to a Job Description and candidates that were ranked by our hybrid algorithmic shortlisting engine (which combines BM25 keyword matching and domain semantic embeddings).
 
 Job Description:

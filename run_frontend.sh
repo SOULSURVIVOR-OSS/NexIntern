@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Script to install dependencies and run the InternLoom Frontend (Express + Vite)
+# Script to install dependencies and run the NexIntern Frontend (Express + Vite)
 set -e
 
 echo "=================================================="
-echo " Starting InternLoom AI Frontend (Port 3000)"
+echo " Starting NexIntern Frontend (Port 3000)"
 echo "=================================================="
 
 cd "$(dirname "$0")/frontend"
